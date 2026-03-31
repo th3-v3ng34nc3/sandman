@@ -1,0 +1,29 @@
+project_name: sandman
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: sandman-binary
+    binary: sandman
+    env: [CGO_ENABLED=0]
+    goos: [linux, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X sandman/cmd.Version={{.Version}}
+
+nfpms:
+  - file_name_template: "sandman_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats: [deb, rpm]
+    vendor: "SecurityOps"
+    homepage: "https://example.com/sandman"
+    maintainer: "Maintainer <admin@example.com>"
+    description: "Container vulnerability scanner wrapper"
+    contents:
+      - src: ./sandman
+        dst: /usr/bin/sandman
+
+archives:
+  - format: zip
+    name_template: "sandman_{{ .Version }}_{{ .Os }}_{{ .Arch }}"

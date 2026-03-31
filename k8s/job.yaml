@@ -1,0 +1,12 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: sandman-scan-nginx
+spec:
+  template:
+    spec:
+      containers:
+      - name: sandman
+        image: rajvanshi/sandman:latest
+        args: ["scan", "image", "nginx:latest"]
+      restartPolicy: Never
