@@ -117,6 +117,45 @@ Output format for --output:
 }
 
 // ------------------------------------------------------------
+// scan vuln
+// ------------------------------------------------------------
+
+var scanVulnCmd = &cobra.Command{
+	Use:   "vuln [path]",
+	Short: "Scan a filesystem for OS and package vulnerabilities",
+	Long:  "Scans installed OS packages and language runtime dependencies for known CVEs on Linux and Windows using Trivy.",
+	Args:  cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := runTool("trivy", buildTrivyVulnArgs(args[0]), "🌙 Sandman is scanning for vulnerabilities"); err != nil {
+			fmt.Printf("❌ Vulnerability scan failed: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+// ------------------------------------------------------------
+// scan malware
+// ------------------------------------------------------------
+
+var scanMalwareCmd = &cobra.Command{
+	Use:   "malware [path]",
+	Short: "Scan a directory for malware using ClamAV",
+	Long: `Recursively scans a directory for malware, viruses, and trojans using ClamAV.
+
+ClamAV exit codes:
+  0  No threats found
+  1  Threats detected (scan completes successfully)
+  2  An error occurred`,
+	Args: cobra.ExactArgs(1),
+	Run: func(cmd *cobra.Command, args []string) {
+		if err := runTool("clamscan", buildClamAVArgs(args[0]), "🌙 Sandman is scanning for malware"); err != nil {
+			fmt.Printf("❌ Malware scan failed: %v\n", err)
+			os.Exit(1)
+		}
+	},
+}
+
+// ------------------------------------------------------------
 // scan all
 // ------------------------------------------------------------
 
@@ -127,7 +166,7 @@ var scanAllCmd = &cobra.Command{
 
 Flags:
   --image     Container image   → image scan
-  --path      Filesystem path   → secrets, code, and IaC scans
+  --path      Filesystem path   → secrets, code, IaC, vuln, and malware scans
   --target    Live URL          → DAST baseline scan (add --full for active)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		image, _ := cmd.Flags().GetString("image")
@@ -166,6 +205,18 @@ Flags:
 			if err := runTool("trivy", buildTrivyIaCArgs(path), "🌙 Sandman is reviewing IaC"); err != nil {
 				fmt.Printf("⚠️  %v\n", err)
 				failed = append(failed, "iac")
+			}
+
+			fmt.Println("\n─── Vulnerability Scan ─────────────────────────────────")
+			if err := runTool("trivy", buildTrivyVulnArgs(path), "🌙 Sandman is scanning for vulnerabilities"); err != nil {
+				fmt.Printf("⚠️  %v\n", err)
+				failed = append(failed, "vuln")
+			}
+
+			fmt.Println("\n─── Malware Scan ───────────────────────────────────────")
+			if err := runTool("clamscan", buildClamAVArgs(path), "🌙 Sandman is scanning for malware"); err != nil {
+				fmt.Printf("⚠️  %v\n", err)
+				failed = append(failed, "malware")
 			}
 		}
 
@@ -236,6 +287,27 @@ func buildOpengrepArgs(path string) []string {
 	}
 	if output != "" {
 		args = append(args, "--output", output)
+	}
+	return append(args, path)
+}
+
+func buildTrivyVulnArgs(path string) []string {
+	args := []string{"fs", "--scanners", "vuln", "--severity", severity}
+	if format != "table" {
+		args = append(args, "--format", format)
+	}
+	if output != "" {
+		args = append(args, "--output", output)
+	}
+	return append(args, path)
+}
+
+// buildClamAVArgs constructs clamscan arguments.
+// ClamAV uses --log for file output; JSON is not natively supported so format is ignored.
+func buildClamAVArgs(path string) []string {
+	args := []string{"--recursive", "--infected"}
+	if output != "" {
+		args = append(args, "--log="+output)
 	}
 	return append(args, path)
 }
@@ -321,6 +393,8 @@ func init() {
 	scanCmd.AddCommand(scanSecretsCmd)
 	scanCmd.AddCommand(scanCodeCmd)
 	scanCmd.AddCommand(scanIaCCmd)
+	scanCmd.AddCommand(scanVulnCmd)
+	scanCmd.AddCommand(scanMalwareCmd)
 	scanCmd.AddCommand(scanDastCmd)
 	scanCmd.AddCommand(scanAllCmd)
 	rootCmd.AddCommand(scanCmd)

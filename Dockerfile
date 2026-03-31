@@ -15,9 +15,12 @@ FROM ghcr.io/zaproxy/zaproxy:stable
 
 USER root
 
-# Install curl for Opengrep download
-RUN apt-get update && apt-get install -y --no-install-recommends curl \
+# Install curl (Opengrep) and ClamAV (malware scanning)
+RUN apt-get update && apt-get install -y --no-install-recommends curl clamav \
     && rm -rf /var/lib/apt/lists/*
+
+# Download the latest ClamAV virus definitions at build time
+RUN freshclam
 
 # Install Opengrep binary from official GitHub releases
 RUN ARCH=$(dpkg --print-architecture) && \
