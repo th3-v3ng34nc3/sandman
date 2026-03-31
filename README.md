@@ -40,11 +40,11 @@ Download the binary for your platform from the [Releases](../../releases) page.
 **Linux**
 ```bash
 # amd64
-curl -LO https://github.com/rajvanshi/sandman/releases/latest/download/sandman_linux_amd64.zip
+curl -LO https://github.com/th3-v3ng34nc3/sandman/releases/latest/download/sandman_linux_amd64.zip
 unzip sandman_linux_amd64.zip && sudo mv sandman /usr/local/bin/
 
 # .deb (Debian / Ubuntu)
-curl -LO https://github.com/rajvanshi/sandman/releases/latest/download/sandman_linux_amd64.deb
+curl -LO https://github.com/th3-v3ng34nc3/sandman/releases/latest/download/sandman_linux_amd64.deb
 sudo dpkg -i sandman_linux_amd64.deb
 
 # .rpm (RHEL / Fedora)
@@ -54,7 +54,7 @@ sudo rpm -i sandman_linux_amd64.rpm
 **Windows** (PowerShell)
 ```powershell
 # Download and extract
-Invoke-WebRequest -Uri "https://github.com/rajvanshi/sandman/releases/latest/download/sandman_windows_amd64.zip" -OutFile sandman.zip
+Invoke-WebRequest -Uri "https://github.com/th3-v3ng34nc3/sandman/releases/latest/download/sandman_windows_amd64.zip" -OutFile sandman.zip
 Expand-Archive sandman.zip -DestinationPath C:\tools\sandman
 
 # Add to PATH
@@ -66,7 +66,7 @@ Expand-Archive sandman.zip -DestinationPath C:\tools\sandman
 Requires Go 1.22+.
 
 ```bash
-git clone https://github.com/rajvanshi/sandman.git
+git clone https://github.com/th3-v3ng34nc3/sandman.git
 cd sandman
 go mod tidy
 go build -o sandman .
