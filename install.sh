@@ -134,20 +134,6 @@ install_zap() {
   ok "ZAP installed — $zap_dir"
 }
 
-install_sandman() {
-  section "Sandman CLI"
-  need sandman "Sandman" && return
-
-  local url="https://github.com/th3-v3ng34nc3/sandman/releases/download/v0.0.1/sandman_linux_${ARCH}.zip"
-  info "Downloading $url"
-  curl -sSL "$url" -o /tmp/sandman.zip
-  unzip -q /tmp/sandman.zip -d /tmp/sandman_extract
-  mv /tmp/sandman_extract/sandman /usr/local/bin/sandman
-  chmod +x /usr/local/bin/sandman
-  rm -rf /tmp/sandman.zip /tmp/sandman_extract
-  ok "Sandman installed — $(sandman version)"
-}
-
 # ── Menu ───────────────────────────────────────────────────────────────────────
 show_menu() {
   echo -e "${BOLD}${CYAN}"
@@ -165,13 +151,11 @@ show_menu() {
   echo "  5)  OS / package CVE scanning           →  trivy"
   echo "  6)  Malware and virus detection         →  clamav"
   echo "  7)  Live web app scanning (DAST)        →  zap + java + python"
-  echo "  8)  All scan engines                    →  all engines"
-  echo "  9)  Sandman CLI (v0.0.1)                →  sandman binary"
-  echo "  10) Everything                          →  sandman + all engines"
+  echo "  8)  All of the above                    →  all engines"
   echo ""
   echo "  0)  Exit"
   echo ""
-  printf "  ${BOLD}Your choice [0-10]:${NC} "
+  printf "  ${BOLD}Your choice [0-8]:${NC} "
   read -r CHOICE
   echo ""
 }
@@ -184,16 +168,12 @@ NEED_OPENGREP=false
 NEED_CLAMAV=false
 NEED_ZAP=false
 
-NEED_SANDMAN=false
-
 case "$CHOICE" in
   1|2|4|5) NEED_TRIVY=true ;;
   3)        NEED_OPENGREP=true ;;
   6)        NEED_CLAMAV=true ;;
   7)        NEED_ZAP=true ;;
   8)        NEED_TRIVY=true; NEED_OPENGREP=true; NEED_CLAMAV=true; NEED_ZAP=true ;;
-  9)        NEED_SANDMAN=true ;;
-  10)       NEED_SANDMAN=true; NEED_TRIVY=true; NEED_OPENGREP=true; NEED_CLAMAV=true; NEED_ZAP=true ;;
   0)        echo "  Bye."; exit 0 ;;
   *)        err "Invalid choice: $CHOICE"; exit 1 ;;
 esac
@@ -202,7 +182,6 @@ $NEED_TRIVY    && install_trivy
 $NEED_OPENGREP && install_opengrep
 $NEED_CLAMAV   && install_clamav
 $NEED_ZAP      && install_zap
-$NEED_SANDMAN  && install_sandman
 
 echo ""
 echo -e "${BOLD}${GREEN}  ✔  Setup complete. Run 'sandman --help' to get started.${NC}"

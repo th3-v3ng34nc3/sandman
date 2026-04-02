@@ -165,7 +165,7 @@ install_sandman() {
   require_tool curl
   require_tool unzip
   ARCH=$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/')
-  URL="https://github.com/th3-v3ng34nc3/sandman/releases/latest/download/sandman_linux_${ARCH}.zip"
+  URL="https://github.com/th3-v3ng34nc3/sandman/releases/download/v0.0.1/sandman_linux_${ARCH}.zip"
   info "Downloading $URL"
   curl -sSL "$URL" -o /tmp/sandman.zip
   unzip -q /tmp/sandman.zip -d /tmp/sandman_ext
