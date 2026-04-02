@@ -2,7 +2,7 @@
   <img src="sandman.png" alt="Sandman" width="950"/>
 </p>
 
-# <img src="sandman.png" width="40" style="vertical-align:middle"/> Sandman
+# <img src="sandman-ico.png" width="40" style="vertical-align:middle"/> Sandman
 
 > **One tool. Every scan. Linux and Windows.**
 
