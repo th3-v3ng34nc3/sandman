@@ -139,7 +139,7 @@ function Install-WithWinget {
 
 function Install-Trivy {
     Write-Header "Installing Trivy"
-    if (Check-Dependency 'trivy' 'Trivy') { return }
+    if (Test-Dependency 'trivy' 'Trivy') { return }
 
     $installDir = "C:\ProgramData\Sandman\bin"
     New-Item -Path $installDir -ItemType Directory -Force | Out-Null
@@ -171,7 +171,7 @@ function Install-Trivy {
 
 function Install-Opengrep {
     Write-Header "Installing Opengrep"
-    if (Check-Dependency 'opengrep' 'Opengrep') { return }
+    if (Test-Dependency 'opengrep' 'Opengrep') { return }
 
     $installDir = "C:\ProgramData\Sandman\bin"
     $exePath = Join-Path $installDir "opengrep.exe"
@@ -187,7 +187,7 @@ function Install-Opengrep {
 
 function Install-ClamAV {
     Write-Header "Installing ClamAV"
-    if (Check-Dependency 'clamscan' 'ClamAV') {
+    if (Test-Dependency 'clamscan' 'ClamAV') {
         Write-Info "Updating virus definitions..."
         try {
             if (Test-Path "C:\Program Files\ClamAV\freshclam.exe") {
@@ -202,7 +202,7 @@ function Install-ClamAV {
     }
 
     if (Install-WithWinget -WingetId 'ClamAV.ClamAV' -ToolName 'ClamAV') {
-        Refresh-Path
+        Update-Path
         Write-Info "Updating virus definitions (this may take a minute)..."
         try {
             Start-Sleep -Seconds 5 # Give the service a moment to settle after install
@@ -224,7 +224,7 @@ function Install-ClamAV {
 
 function Install-ZAP {
     Write-Header "Installing OWASP ZAP"
-    if (Check-Dependency 'zap-baseline.py' 'ZAP (zap-baseline.py)') { return }
+    if (Test-Dependency 'zap-baseline.py' 'ZAP (zap-baseline.py)') { return }
 
     # ZAP requires Java and Python
     Write-Info "Checking for Java and Python (ZAP runtime requirements)..."
@@ -255,7 +255,7 @@ function Install-ZAP {
 
 function Install-Sandman {
     Write-Header "Installing Sandman CLI"
-    if (Check-Dependency 'sandman' 'Sandman') { return }
+    if (Test-Dependency 'sandman' 'Sandman') { return }
 
     $installDir = "C:\ProgramData\Sandman\bin"
     New-Item -Path $installDir -ItemType Directory -Force | Out-Null
