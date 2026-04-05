@@ -203,6 +203,57 @@ Note: ClamAV does not support JSON output natively. The report is saved as a .lo
 	},
 }
 
+// ------------------------------------------------------------  
+// scan sbom  
+// ------------------------------------------------------------  
+  
+var scanSbomCmd = &cobra.Command{  
+	Use:   "sbom [target]",  
+	Short: "Generate a Software Bill of Materials (SBOM)",  
+	Long: `Generate an SBOM for a container image or filesystem using Trivy.  
+  
+Supported SBOM formats (--sbom-format):  
+  cyclonedx      CycloneDX JSON (default)  
+  spdx-json      SPDX JSON  
+  spdx           SPDX tag-value  
+  
+Target type (--type):  
+  image          Container image (default)  
+  fs             Filesystem path`,  
+	Args: cobra.ExactArgs(1),  
+	Run: func(cmd *cobra.Command, args []string) {  
+		sbomFormat, _ := cmd.Flags().GetString("sbom-format")  
+		targetType, _ := cmd.Flags().GetString("type")  
+		report := resolveReport("sbom", time.Now().Format("20060102-150405"))  
+		printScanHeader("SBOM Generation", args[0], report)  
+		if err := runTool("trivy", buildTrivySbomArgs(args[0], sbomFormat, targetType, report)); err != nil {  
+			printScanFailed("SBOM generation", err)  
+			os.Exit(1)  
+		}  
+		printScanDone("SBOM generation", report)  
+	},  
+}
+
+// ------------------------------------------------------------  
+// scan license  
+// ------------------------------------------------------------  
+  
+var scanLicenseCmd = &cobra.Command{  
+	Use:   "license [path]",  
+	Short: "Scan for license compliance issues in dependencies",  
+	Long:  "Scans a filesystem path for software license compliance issues using Trivy. Detects restrictive or non-compliant licenses in project dependencies.",  
+	Args:  cobra.ExactArgs(1),  
+	Run: func(cmd *cobra.Command, args []string) {  
+		report := resolveReport("license", time.Now().Format("20060102-150405"))  
+		printScanHeader("License Scan", args[0], report)  
+		if err := runTool("trivy", buildTrivyLicenseArgs(args[0], report)); err != nil {  
+			printScanFailed("license scan", err)  
+			os.Exit(1)  
+		}  
+		printScanDone("license scan", report)  
+	},  
+}
+
 // ------------------------------------------------------------
 // scan dast
 // ------------------------------------------------------------
@@ -253,7 +304,7 @@ var scanAllCmd = &cobra.Command{
 
 Flags:
   --image     Container image   → image scan
-  --path      Filesystem path   → secrets, code, IaC, vuln, and malware scans
+  --path      Filesystem path   → secrets, code, IaC, vuln, malware, SBOM, and license scans
   --target    Live URL          → DAST scan (add --full for active)`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		image, _ := cmd.Flags().GetString("image")
@@ -293,6 +344,15 @@ Flags:
 			} else {
 				printScanDone("image scan", r)
 				results = append(results, scanResult{"image", "pass", r})
+			}
+			rImageSbom := fmt.Sprintf("sandman-sbom-image-%s.json", ts)  
+			printScanHeader("Image SBOM Generation", image, rImageSbom)  
+			if err := runTool("trivy", buildTrivySbomArgs(image, "cyclonedx", "image", rImageSbom)); err != nil {  
+				printScanFailed("image SBOM generation", err)  
+				results = append(results, scanResult{"sbom(image)", "failed", rImageSbom})  
+			} else {  
+				printScanDone("image SBOM generation", rImageSbom)  
+				results = append(results, scanResult{"sbom(image)", "pass", rImageSbom})  
 			}
 		}
 
@@ -367,6 +427,28 @@ Flags:
 			} else {
 				printScanDone("malware scan", rMal)
 				results = append(results, scanResult{"malware", "pass", rMal})
+			}
+			
+			// SBOM  
+			rSbom := fmt.Sprintf("sandman-sbom-%s.json", ts)  
+			printScanHeader("SBOM Generation", path, rSbom)  
+			if err := runTool("trivy", buildTrivySbomArgs(path, "cyclonedx", "fs", rSbom)); err != nil {  
+				printScanFailed("SBOM generation", err)  
+				results = append(results, scanResult{"sbom", "failed", rSbom})  
+			} else {  
+				printScanDone("SBOM generation", rSbom)  
+				results = append(results, scanResult{"sbom", "pass", rSbom})  
+			}  
+  
+			// License  
+			rLicense := fmt.Sprintf("sandman-license-%s.json", ts)  
+			printScanHeader("License Scan", path, rLicense)  
+			if err := runTool("trivy", buildTrivyLicenseArgs(path, rLicense)); err != nil {  
+				printScanFailed("license scan", err)  
+				results = append(results, scanResult{"license", "failed", rLicense})  
+			} else {  
+				printScanDone("license scan", rLicense)  
+				results = append(results, scanResult{"license", "pass", rLicense})  
 			}
 		}
 
@@ -482,6 +564,23 @@ func buildZapArgs(target string, full bool, apiSpec, reportPath string) (string,
 	return binary, args
 }
 
+func buildTrivySbomArgs(target, sbomFormat, targetType, reportPath string) []string {  
+	var args []string  
+	switch targetType {  
+	case "fs":  
+		args = []string{"fs", "--format", sbomFormat}  
+	default:  
+		args = []string{"image", "--format", sbomFormat}  
+	}  
+	args = append(args, "--output", reportPath)  
+	return append(args, target)  
+}  
+  
+func buildTrivyLicenseArgs(path, reportPath string) []string {  
+	args := []string{"fs", "--scanners", "license", "--severity", severity, "--format", format, "--output", reportPath}  
+	return append(args, path)  
+}
+
 // ------------------------------------------------------------
 // Tool runners
 // ------------------------------------------------------------
@@ -530,6 +629,10 @@ func init() {
 	scanCmd.PersistentFlags().StringVar(&format, "format", "json", "Output format: json, table, sarif (html/xml for DAST)")
 	scanCmd.PersistentFlags().StringVar(&output, "output", "", "Override report file path (default: auto-generated per scan type)")
 
+	// scan sbom flags  
+	scanSbomCmd.Flags().String("sbom-format", "cyclonedx", "SBOM format: cyclonedx, spdx-json, spdx")  
+	scanSbomCmd.Flags().String("type", "image", "Target type: image or fs")
+
 	scanDastCmd.Flags().Bool("full", false, "Run a full active scan instead of the passive baseline scan")
 	scanDastCmd.Flags().String("api-spec", "", "OpenAPI/Swagger spec URL or file path for API scanning")
 
@@ -538,6 +641,8 @@ func init() {
 	scanAllCmd.Flags().String("target", "", "Live URL for DAST scan (e.g. https://example.com)")
 	scanAllCmd.Flags().Bool("full", false, "Use full active ZAP scan instead of baseline")
 
+	scanCmd.AddCommand(scanSbomCmd)  
+	scanCmd.AddCommand(scanLicenseCmd)
 	scanCmd.AddCommand(scanImageCmd)
 	scanCmd.AddCommand(scanSecretsCmd)
 	scanCmd.AddCommand(scanCodeCmd)
