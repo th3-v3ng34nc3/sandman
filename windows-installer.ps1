@@ -311,9 +311,11 @@ function Show-Menu {
   5) OS / package vulnerabilities    ->  trivy
   6) Files for malware / viruses     ->  clamav
   7) Live web applications (DAST)    ->  zap + python + java
-  8) All underlying scan engines     ->  all engines
-  9) Sandman CLI                     ->  sandman binary
-  10) Everything                     ->  sandman + all engines
+  8) SBOM generation                 ->  trivy  
+  9) License compliance scanning     ->  trivy 
+  10) All underlying scan engines    ->  all engines
+  11) Sandman CLI                    ->  sandman binary
+  12) Everything                     ->  sandman + all engines
 
   0) Exit
 
@@ -324,33 +326,35 @@ function Show-Menu {
 
 $choice = Show-Menu
 
-switch ($choice) {
-    '1' { Install-Trivy }
-    '2' { Install-Trivy }
-    '3' { Install-Opengrep }
-    '4' { Install-Trivy }
-    '5' { Install-Trivy }
-    '6' { Install-ClamAV }
-    '7' { Install-ZAP }
-    '8' {
-        Install-Trivy
-        Install-Opengrep
-        Install-ClamAV
-        Install-ZAP
-    }
-    '9' { Install-Sandman }
-    '10' {
-        Install-Sandman
-        Install-Trivy
-        Install-Opengrep
-        Install-ClamAV
-        Install-ZAP
-    }
-    '0' { Write-Host "`n  Bye."; return }
-    default {
-        Write-Err "Invalid choice: $choice"
-        exit 1
-    }
+switch ($choice) {  
+    '1' { Install-Trivy }  
+    '2' { Install-Trivy }  
+    '3' { Install-Opengrep }  
+    '4' { Install-Trivy }  
+    '5' { Install-Trivy }  
+    '6' { Install-ClamAV }  
+    '7' { Install-ZAP }  
+    '8' { Install-Trivy }  
+    '9' { Install-Trivy }  
+    '10' {  
+        Install-Trivy  
+        Install-Opengrep  
+        Install-ClamAV  
+        Install-ZAP  
+    }  
+    '11' { Install-Sandman }  
+    '12' {  
+        Install-Sandman  
+        Install-Trivy  
+        Install-Opengrep  
+        Install-ClamAV  
+        Install-ZAP  
+    }  
+    '0' { Write-Host "`n  Bye."; return }  
+    default {  
+        Write-Err "Invalid choice: $choice"  
+        exit 1  
+    }  
 }
 
 Write-Host ""

@@ -192,9 +192,11 @@ show_menu() {
   echo "  5) OS / package vulnerabilities    →  trivy"
   echo "  6) Files for malware / viruses     →  clamav"
   echo "  7) Live web applications (DAST)    →  zap + python + java"
-  echo "  8) All underlying scan engines     →  all engines"
-  echo "  9) Sandman CLI                     →  sandman binary"
-  echo "  10) Everything                     →  sandman + all engines"
+  echo "  8) SBOM generation                 →  trivy"  
+  echo "  9) License compliance scanning     →  trivy"  
+  echo "  10) All underlying scan engines    →  all engines"
+  echo "  11) Sandman CLI                    →  sandman binary"
+  echo "  12) Everything                     →  sandman + all engines"
   echo ""
   echo "  0) Exit"
   echo ""
@@ -209,33 +211,35 @@ main() {
   detect_distro
   show_menu
 
-  case "$choice" in
-    1) install_trivy ;;
-    2) install_trivy ;;
-    3) install_opengrep ;;
-    4) install_trivy ;;
-    5) install_trivy ;;
-    6) install_clamav ;;
-    7) install_zap ;;
-    8)
-      install_trivy
-      install_opengrep
-      install_clamav
-      install_zap
-      ;;
-    9) install_sandman ;;
-    10)
-      install_sandman
-      install_trivy
-      install_opengrep
-      install_clamav
-      install_zap
-      ;;
-    0) echo "  Bye."; exit 0 ;;
-    *)
-      err "Invalid choice: $choice"
-      exit 1
-      ;;
+  case "$choice" in  
+    1) install_trivy ;;  
+    2) install_trivy ;;  
+    3) install_opengrep ;;  
+    4) install_trivy ;;  
+    5) install_trivy ;;  
+    6) install_clamav ;;  
+    7) install_zap ;;  
+    8) install_trivy ;;  
+    9) install_trivy ;;  
+    10)  
+      install_trivy  
+      install_opengrep  
+      install_clamav  
+      install_zap  
+      ;;  
+    11) install_sandman ;;  
+    12)  
+      install_sandman  
+      install_trivy  
+      install_opengrep  
+      install_clamav  
+      install_zap  
+      ;;  
+    0) echo "  Bye."; exit 0 ;;  
+    *)  
+      err "Invalid choice: $choice"  
+      exit 1  
+      ;;  
   esac
 
   echo ""
